@@ -1,0 +1,41 @@
+// PassKonnect data model — v0 (thinnest slice)
+// Default datasource is SQLite for zero-config local development.
+// For production, swap provider to "postgresql" and set DATABASE_URL accordingly —
+// the schema below is intentionally Postgres-compatible.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id                    String   @id @default(uuid())
+  name                  String
+  country               String
+  productCategory       String
+  productDescription    String
+  inputsOrigin          String   // plain-language description of where raw materials/inputs come from
+  registrationNumber    String?
+  registrationCountry   String?
+  contactEmail          String
+  contactPhone          String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  certificates          Certificate[]
+}
+
+model Certificate {
+  id                String   @id @default(uuid())
+  businessId        String
+  business          Business @relation(fields: [businessId], references: [id])
+  destinationCountry String
+  status            String   @default("draft") // draft | issued
+  checklist         String   // JSON-encoded export-readiness checklist at time of generation
+  pdfPath           String?  // relative path to the generated PDF on disk
+  createdAt         DateTime @default(now())
+}
