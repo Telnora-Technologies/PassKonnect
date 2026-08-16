@@ -1,4 +1,5 @@
 import { Router } from "express";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../prisma.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -119,7 +120,11 @@ router.get(
     if (!buffer) return res.status(404).json({ error: "File not found." });
 
     res.setHeader("Content-Disposition", `inline; filename="${document.originalName}"`);
-    res.type(document.filePath).send(buffer);
+    // res.type() treats any string containing "/" as a literal Content-Type
+    // value rather than a filename to derive one from — blob keys like
+    // "documents/<id>/<uuid>.pdf" contain slashes, so pass just the
+    // extension (Express looks that up via the mime-types table).
+    res.type(path.extname(document.filePath)).send(buffer);
   })
 );
 
