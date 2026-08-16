@@ -6,4 +6,7 @@ build/
 server/prisma/dev.db
 server/generated/
 server/data/
+server/uploads/
+server/blob-storage/
 .DS_Store
+.claude/settings.local.json

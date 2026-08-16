@@ -9,29 +9,33 @@
 // intentionally printed on every generated certificate.
 
 import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
-
-const OUTPUT_DIR = path.resolve("generated", "certificates");
+import QRCode from "qrcode";
+import { putBlob } from "./lib/blobStorage.js";
 
 function humanize(slug) {
   return slug ? slug.replaceAll("_", " ") : slug;
 }
 
-export function ensureOutputDir() {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+function humanizeVerification(status) {
+  if (status === "verified") return "Verified by PassKonnect";
+  if (status === "pending") return "Verification in progress";
+  return "Not yet verified";
 }
 
-export function certificatePdfPath(certificateId) {
-  return path.join(OUTPUT_DIR, `${certificateId}.pdf`);
+export function certificateBlobKey(certificateId) {
+  return `certificates/${certificateId}.pdf`;
 }
 
-export function generateCertificatePdf({ certificateId, business, destinationCountry }) {
-  ensureOutputDir();
-  const filePath = certificatePdfPath(certificateId);
+export async function generateCertificatePdf({ certificateId, business, destinationCountry }) {
+  const key = certificateBlobKey(certificateId);
+
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const profileUrl = `${frontendUrl}/p/${business.id}`;
+  const qrDataUrl = await QRCode.toDataURL(profileUrl, { margin: 1, width: 160 });
+
   const doc = new PDFDocument({ size: "A4", margin: 50 });
-  const stream = fs.createWriteStream(filePath);
-  doc.pipe(stream);
+  const chunks = [];
+  doc.on("data", (chunk) => chunks.push(chunk));
 
   // Header
   doc
@@ -87,11 +91,32 @@ export function generateCertificatePdf({ certificateId, business, destinationCou
         "customs authority) before it can be used to claim AfCFTA preferential tariff treatment.",
       { align: "left" }
     );
+  doc.fillColor("#000000");
+
+  // QR code linking to the business's public, QR-verified profile page.
+  doc.moveDown(1.2);
+  const qrSize = 80;
+  const qrX = doc.page.margins.left;
+  const qrY = doc.y;
+  doc.image(qrDataUrl, qrX, qrY, { width: qrSize, height: qrSize });
+  doc
+    .fontSize(9)
+    .font("Helvetica-Bold")
+    .text(humanizeVerification(business.verificationStatus), qrX + qrSize + 12, qrY + 22, { width: 260 });
+  doc
+    .fontSize(8)
+    .font("Helvetica")
+    .fillColor("#555555")
+    .text("Scan to view this business's verified PassKonnect profile.", qrX + qrSize + 12, qrY + 40, { width: 260 });
+  doc.fillColor("#000000");
 
   doc.end();
 
-  return new Promise((resolve, reject) => {
-    stream.on("finish", () => resolve(filePath));
-    stream.on("error", reject);
+  const buffer = await new Promise((resolve, reject) => {
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
   });
+
+  await putBlob(key, buffer, "application/pdf");
+  return key;
 }
