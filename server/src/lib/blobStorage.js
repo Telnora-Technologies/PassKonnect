@@ -1,14 +1,19 @@
 // Storage abstraction so route handlers don't care whether they're running
 // locally (plain files on disk — zero setup for `npm run dev`) or on
 // Netlify (serverless functions with no shared local disk between
-// invocations — needs Netlify Blobs). `process.env.NETLIFY` is set
-// automatically by Netlify's build/runtime, so no manual flag is needed.
+// invocations — needs Netlify Blobs).
+//
+// `process.env.NETLIFY` is only set during Netlify's *build* step, not in
+// the deployed function's own runtime — so it can't be used to detect
+// "am I running as a Netlify function right now." Netlify Functions run on
+// AWS Lambda, which always sets AWS_LAMBDA_FUNCTION_NAME in the actual
+// invocation environment, so that's the reliable signal here.
 
 import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 
-const isNetlify = Boolean(process.env.NETLIFY);
+const isNetlify = Boolean(process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const LOCAL_ROOT = path.resolve("blob-storage");
 
 let netlifyStorePromise;
