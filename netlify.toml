@@ -1,5 +1,10 @@
 [build]
-  command = "cd client && npm install && npm run build"
+  # Netlify only installs deps for the package it thinks is "the" project.
+  # This is a two-package repo (client/ + server/), and the function lives
+  # under server/, so server's own deps (express, serverless-http, Prisma,
+  # etc.) need an explicit install here or they never exist on the build
+  # machine at all — that was the original failure.
+  command = "cd server && npm install && cd ../client && npm install && npm run build"
   publish = "client/dist"
   functions = "server/netlify/functions"
 
