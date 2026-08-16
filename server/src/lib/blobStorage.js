@@ -19,7 +19,21 @@ const LOCAL_ROOT = path.resolve("blob-storage");
 let netlifyStorePromise;
 async function getNetlifyStore() {
   if (!netlifyStorePromise) {
-    netlifyStorePromise = import("@netlify/blobs").then(({ getStore }) => getStore("passkonnect"));
+    netlifyStorePromise = import("@netlify/blobs").then(({ getStore }) => {
+      // Automatic context injection (implicit siteID/token) isn't reaching
+      // this function, so fall back to explicit credentials from env vars
+      // when present. NETLIFY_SITE_ID is the site's ID (Site settings ->
+      // General -> Site details); NETLIFY_BLOBS_TOKEN is a Personal Access
+      // Token (user account -> Applications -> Personal access tokens).
+      if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_BLOBS_TOKEN) {
+        return getStore({
+          name: "passkonnect",
+          siteID: process.env.NETLIFY_SITE_ID,
+          token: process.env.NETLIFY_BLOBS_TOKEN,
+        });
+      }
+      return getStore("passkonnect");
+    });
   }
   return netlifyStorePromise;
 }
