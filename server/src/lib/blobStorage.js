@@ -25,8 +25,17 @@ async function getNetlifyStore() {
       // when present. NETLIFY_SITE_ID is the site's ID (Site settings ->
       // General -> Site details); NETLIFY_BLOBS_TOKEN is a Personal Access
       // Token (user account -> Applications -> Personal access tokens).
+      //
+      // getStore() has exactly two overloads per the installed package's
+      // own type defs (dist/main.d.ts): getStore(name: string) or
+      // getStore(options: { name, siteID, token, ... }) — there is NO
+      // two-argument getStore(name, options) form. Passing a second
+      // argument is silently ignored, which is why an earlier attempt at
+      // this fix (a getStore(name, {siteID, token}) call, based on a stale
+      // doc page) kept failing with the exact same error.
       if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_BLOBS_TOKEN) {
-        return getStore("passkonnect", {
+        return getStore({
+          name: "passkonnect",
           siteID: process.env.NETLIFY_SITE_ID,
           token: process.env.NETLIFY_BLOBS_TOKEN,
         });
