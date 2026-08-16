@@ -26,8 +26,7 @@ async function getNetlifyStore() {
       // General -> Site details); NETLIFY_BLOBS_TOKEN is a Personal Access
       // Token (user account -> Applications -> Personal access tokens).
       if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_BLOBS_TOKEN) {
-        return getStore({
-          name: "passkonnect",
+        return getStore("passkonnect", {
           siteID: process.env.NETLIFY_SITE_ID,
           token: process.env.NETLIFY_BLOBS_TOKEN,
         });
