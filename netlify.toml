@@ -10,7 +10,20 @@
 
 [functions]
   node_bundler = "esbuild"
+  # Prisma's compiled query-engine binary is a non-JS asset esbuild's
+  # bundler doesn't trace — included_files copies it alongside the bundle
+  # so Prisma's own (unbundled, since it's also external below) runtime
+  # path resolution finds it.
   included_files = ["server/node_modules/.prisma/client/*.node"]
+  # pdfkit loads its font metric (.afm) files via paths computed relative
+  # to its own module location at runtime. esbuild's single-file bundling
+  # rewrites those relative paths to point at the bundle's own location
+  # instead (confirmed by a deploy that failed looking for
+  # ".../functions/data/Helvetica.afm", not pdfkit's real data dir) —
+  # marking it external keeps it as a normal `require("pdfkit")` resolved
+  # against the real node_modules/pdfkit at runtime, where its internal
+  # relative paths work exactly as they do locally.
+  external_node_modules = ["pdfkit"]
 
 [[redirects]]
   from = "/api/*"
