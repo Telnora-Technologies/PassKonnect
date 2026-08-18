@@ -3,31 +3,43 @@
 A digital trade-readiness identity for African MSMEs — built for the AfCFTA
 Digital Innovation Challenge (2nd Edition).
 
-This is the **v0 thin slice**: a business owner fills a guided onboarding
-form, picks a destination country, and gets back an export-readiness
-checklist plus a draft AfCFTA Certificate of Origin PDF. Directory/search and
-QR-verified public profiles (described in the concept note) are the next
-slice, not built yet — this first version is deliberately scoped tight so
-it's real and demoable fast.
+A business owner fills a guided onboarding form, uploads compliance
+documents for review, and gets back an export-readiness checklist plus a
+draft AfCFTA Certificate of Origin PDF. Once an admin approves their
+documents, the business is **verified** — discoverable in a public directory
+and reachable via a QR-linked public profile page that buyers can scan
+straight off the certificate.
+
+Live at **[passkonnect.netlify.app](https://passkonnect.netlify.app)**.
 
 ## Project structure
 
 ```
 PassKonnect/
-├── server/     Node/Express API + PDF generation
-└── client/     React (Vite) onboarding UI
+├── server/     Node/Express API, Postgres (Prisma) persistence, PDF generation
+└── client/     React (Vite) app — auth, dashboard, directory, admin review queue
 ```
 
 ## Prerequisites
 
 - Node.js 18+ and npm (check with `node --version`)
+- A Postgres database (a free [Neon](https://neon.tech) project works well)
 
 ## 1. Run the server
 
 ```bash
 cd server
 cp .env.example .env
+```
+
+Fill in `.env`: at minimum `DATABASE_URL` (your Postgres connection string)
+and `JWT_SECRET` (any long random string). The other vars have working
+defaults for local dev — see the comments in `.env.example`.
+
+```bash
 npm install
+npx prisma migrate dev
+npm run seed   # creates the admin account from ADMIN_EMAIL/ADMIN_PASSWORD
 npm run dev
 ```
 
@@ -37,12 +49,7 @@ You should see:
 PassKonnect server listening on http://localhost:4000
 ```
 
-Data is stored in a local JSON file at `server/data/db.json` (created
-automatically on first write) — no database installation needed for this
-version. See `server/prisma/README.md` for the upgrade path to Postgres when
-you're ready for production.
-
-Quick sanity check while the server's running:
+Sanity check while the server's running:
 
 ```bash
 curl http://localhost:4000/api/health
@@ -65,26 +72,39 @@ proxies `/api/*` requests to the backend on port 4000 (see
 
 ## 3. Try the flow
 
-1. Fill in the business profile form and continue.
-2. Pick a destination country.
-3. You'll get an export-readiness checklist and a button to download a draft
-   Certificate of Origin PDF.
+1. Sign up, then create a business profile.
+2. Upload a business registration document and a TIN document (any PDF/JPG/PNG
+   works locally — files are stored under `server/blob-storage/`, gitignored).
+3. Log out, log back in as the seeded admin account, go to `/admin`, and
+   approve both documents. The business flips to **verified**.
+4. Check `/directory` and the business's public profile at `/p/:id`.
+5. Back in the business detail page, pick a destination country to generate
+   an export-readiness checklist and download a draft Certificate of Origin
+   PDF — it embeds a QR code linking to the public profile.
 
-## A note on how this was built
+## Tests
 
-This project was scaffolded with Claude's help based on the PassKonnect
-concept note. Every file was written and reasoned through in that session,
-but **the install and first boot have not been run or verified** — the
-sandbox this was built in had no network access to npm's registry at the
-time. Please treat the first `npm install` / `npm run dev` on your machine as
-the real first test, and don't hesitate to come back with whatever error
-output you get — that's normal for a freshly scaffolded project and
-straightforward to fix once we can see the actual error.
+```bash
+cd server && npm test     # vitest + supertest, Prisma mocked — no DB needed
+cd client && npm test     # vitest + @testing-library/react
+```
 
-## Roadmap (from the concept note, not yet built)
+Both run in CI (`.github/workflows/ci.yml`) on every push and pull request,
+alongside lint and (for the client) a production build.
 
-- Public, shareable, QR-verified profile pages
-- Searchable directory of verified MSMEs
-- Admin/verification layer for uploaded compliance documents
-- Postgres + Prisma for production persistence (see `server/prisma/README.md`)
+## Deployment
+
+Deploys to Netlify as a single site: the built React app is served as static
+files, and the whole Express API runs as one Netlify Function
+(`server/netlify/functions/api.js`, wrapped with `serverless-http`). See the
+"Deployment (Netlify)" section in `HANDOFF.md` for the full configuration
+notes, including the couple of serverless-specific gotchas (Prisma's native
+binary, pdfkit's font files, Netlify Blobs credentials) that came up getting
+it working.
+
+## Roadmap
+
 - AI-assisted tariff/HS-code classification
+- Password reset / email verification
+- Editing an existing business profile (delete + recreate is currently the
+  only path)
