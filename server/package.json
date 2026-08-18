@@ -9,7 +9,9 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "test": "vitest run",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@netlify/blobs": "^8.1.0",
@@ -23,11 +25,17 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
     "pdfkit": "^0.15.0",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
     "qrcode": "^1.5.4",
     "serverless-http": "^3.2.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "prisma": "^5.20.0"
+    "@eslint/js": "^9.12.0",
+    "eslint": "^9.12.0",
+    "prisma": "^5.20.0",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.3"
   }
 }
