@@ -1,7 +1,16 @@
 import js from "@eslint/js";
 
 export default [
-  { ignores: ["node_modules/**", "generated/**", "blob-storage/**", "uploads/**", "prisma/migrations/**"] },
+  {
+    ignores: [
+      "node_modules/**",
+      "generated/**",
+      "blob-storage/**",
+      "uploads/**",
+      "prisma/migrations/**",
+      "coverage/**",
+    ],
+  },
   js.configs.recommended,
   {
     languageOptions: {
