@@ -82,6 +82,17 @@ describe("POST /api/businesses", () => {
     expect(prisma.business.create).not.toHaveBeenCalled();
   });
 
+  it("rejects a malformed contact email with a validation error", async () => {
+    const res = await asOwner(request(app).post("/api/businesses")).send({
+      ...validPayload,
+      contactEmail: "not-an-email",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/valid contact email/i);
+    expect(prisma.business.create).not.toHaveBeenCalled();
+  });
+
   it("rejects unauthenticated requests", async () => {
     const res = await request(app).post("/api/businesses").send(validPayload);
     expect(res.status).toBe(401);

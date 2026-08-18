@@ -6,6 +6,7 @@ import { writeLimiter } from "../lib/rateLimit.js";
 import { generateChecklist } from "../checklist.js";
 import { generateCertificatePdf } from "../certificate.js";
 import { deleteBlob } from "../lib/blobStorage.js";
+import { createBusinessSchema } from "../schemas/business.schema.js";
 
 const router = Router();
 
@@ -32,6 +33,11 @@ router.post(
   requireAuth,
   writeLimiter,
   asyncHandler(async (req, res) => {
+    const parsed = createBusinessSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0].message });
+    }
+
     const {
       name,
       country,
@@ -42,14 +48,7 @@ router.post(
       registrationCountry,
       contactEmail,
       contactPhone,
-    } = req.body;
-
-    if (!name || !country || !productCategory || !productDescription || !inputsOrigin || !contactEmail) {
-      return res.status(400).json({
-        error:
-          "Missing required fields. Required: name, country, productCategory, productDescription, inputsOrigin, contactEmail.",
-      });
-    }
+    } = parsed.data;
 
     const business = await prisma.business.create({
       data: {
