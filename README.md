@@ -23,7 +23,8 @@ PassKonnect/
 ## Prerequisites
 
 - Node.js 18+ and npm (check with `node --version`)
-- A Postgres database (a free [Neon](https://neon.tech) project works well)
+- A Postgres database — either a free [Neon](https://neon.tech) project, or
+  run one locally with Docker (no account needed, see below)
 
 ## 1. Run the server
 
@@ -35,6 +36,15 @@ cp .env.example .env
 Fill in `.env`: at minimum `DATABASE_URL` (your Postgres connection string)
 and `JWT_SECRET` (any long random string). The other vars have working
 defaults for local dev — see the comments in `.env.example`.
+
+**No Postgres account?** Run one locally instead — from the repo root:
+
+```bash
+docker compose up -d db
+```
+
+Then set `DATABASE_URL="postgresql://passkonnect:passkonnect@localhost:5432/passkonnect"`
+in `server/.env` (matches `docker-compose.yml`'s credentials).
 
 ```bash
 npm install
