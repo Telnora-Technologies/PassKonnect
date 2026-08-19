@@ -31,7 +31,6 @@ jobs:
           FRONTEND_URL: http://localhost:5173
 
       - run: npm audit --production --audit-level=high
-        continue-on-error: true
 
   client:
     name: Client (lint, test + coverage, build)
