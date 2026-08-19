@@ -168,6 +168,16 @@ router.delete(
       prisma.business.delete({ where: { id: business.id } }),
     ]);
 
+    req.log.info(
+      {
+        event: "business.deleted",
+        businessId: business.id,
+        actorEmail: req.user.email,
+        verificationStatus: business.verificationStatus,
+      },
+      `Business deleted by ${req.user.email}`
+    );
+
     res.json({ ok: true });
   })
 );
@@ -208,6 +218,17 @@ router.post(
       where: { id: certificate.id },
       data: { pdfPath },
     });
+
+    req.log.info(
+      {
+        event: "certificate.generated",
+        businessId: business.id,
+        certificateId: certificate.id,
+        destinationCountry,
+        actorEmail: req.user.email,
+      },
+      `Certificate generated for ${destinationCountry} by ${req.user.email}`
+    );
 
     res.status(201).json({ certificate: { ...updated, checklist } });
   })

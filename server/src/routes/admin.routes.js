@@ -58,6 +58,18 @@ router.post(
 
     const verificationStatus = await recomputeVerificationStatus(document.businessId);
 
+    req.log.info(
+      {
+        event: "document.reviewed",
+        documentId: document.id,
+        businessId: document.businessId,
+        status,
+        actorEmail: req.user.email,
+        verificationStatus,
+      },
+      `Document ${status} by ${req.user.email}`
+    );
+
     res.json({ ok: true, verificationStatus });
   })
 );
