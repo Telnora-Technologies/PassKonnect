@@ -53,6 +53,17 @@ npm run seed   # creates the admin account from ADMIN_EMAIL/ADMIN_PASSWORD
 npm run dev
 ```
 
+**Run the API in a container too?** `server/Dockerfile` builds a production
+image. From the repo root, after running migrations against the `db`
+service above:
+
+```bash
+docker compose up -d --build app
+```
+
+This is meant for trying a containerized setup, not for the actual
+production deployment — see [Deployment](#deployment) below.
+
 You should see:
 
 ```

@@ -16,5 +16,24 @@ services:
       timeout: 5s
       retries: 10
 
+  # Optional: run the API itself in a container instead of `npm run dev`.
+  # Still requires a migrated DB — run `npx prisma migrate deploy` against
+  # DATABASE_URL before starting this, since the container doesn't do it
+  # automatically.
+  app:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://passkonnect:passkonnect@db:5432/passkonnect
+      JWT_SECRET: change-me-in-production
+      FRONTEND_URL: http://localhost:5173
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: change-me-in-production
+
 volumes:
   passkonnect-db-data:
