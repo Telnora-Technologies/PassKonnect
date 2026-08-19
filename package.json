@@ -1,0 +1,10 @@
+{
+  "name": "passkonnect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PassKonnect — a digital trade-readiness identity for African MSMEs, built for the AfCFTA Digital Innovation Challenge.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Telnora-Technologies/PassKonnect.git"
+  }
+}
